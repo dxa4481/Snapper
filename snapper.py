@@ -23,7 +23,7 @@ def save_image(uri, file_name, driver):
 
 def host_reachable(host, timeout):
     try:
-        get(host, timeout=timeout)
+        get(host, timeout=timeout, verify=False)
         return True
     except:
         return False
@@ -31,7 +31,8 @@ def host_reachable(host, timeout):
 def host_worker(hostQueue, fileQueue, timeout, user_agent, verbose):
     dcap = dict(DesiredCapabilities.PHANTOMJS)
     dcap["phantomjs.page.settings.userAgent"] = user_agent
-    driver = webdriver.PhantomJS(desired_capabilities=dcap) # or add to your PATH
+    dcap["accept_untrusted_certs"] = True
+    driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'], desired_capabilities=dcap) # or add to your PATH
     driver.set_window_size(1024, 768) # optional
     driver.set_page_load_timeout(timeout)
     while(not hostQueue.empty()):
