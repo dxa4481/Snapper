@@ -5,7 +5,7 @@ A security tool for grabbing screenshots of many web hosts. This tool is useful 
 
 - Install python dependancies
 ```bash
-pip install selenium, Jinja2
+pip install selenium, Jinja2, requests
 ```
 
 - Install phantomJS (you need to have [npm installed](https://nodejs.org/en/download/package-manager/))
