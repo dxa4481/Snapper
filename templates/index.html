@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="css/materialize.min.css">
+        <script src="js/jquery.min.js"></script>
+        <script src="js/materialize.min.js"></script>            
+    </head>
+
+    <body>
+        {% for hosts in setsOfSix%}
+            <div class="row">
+                {% for host, filename in hosts.iteritems()%}
+                    <div class="col l2 m4 s6">
+                        <img style="cursor: pointer; padding: 25px; width:95%; border:1px solid #021a40;" onclick="updateModel('{{filename.split('output/')[1]}}', '{{host}}')" src="{{filename.split('output/')[1]}}"/>
+                        <a src="{{host}}">{{host}}</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        
+        <!-- Modal Trigger -->
+        <div id="modal1" class="modal modal-fixed-footer">
+            <div class="modal-content">
+                <div id="modalImage"></div>
+            </div>
+            <div class="modal-footer">
+                <p id="modalHost"></p>
+            </div>
+        </div>
+
+        <script>
+            var updateModel = function(fileName, host){
+                document.getElementById("modalImage").innerHTML = "<img src=\"" + fileName + "\" style=\"width:100%;\"/>";
+                document.getElementById("modalHost").innerHTML = "<a src=\"" + host + "\">" + host + "</a>";
+                $('#modal1').openModal();
+            }
+            $(document).ready(function(){
+                $('.modal-trigger').leanModal();
+            });
+        </script> 
+
+    </body>
+
+</html>
