@@ -24,7 +24,7 @@ For a simple demo try:
 ```
 python snapper.py -l "google.com, gmail.google.com, ads.google.com" -c 3 -v
 ```
-This kicks off 3 processes, each which fetch screenshots the http and https versions of the hosts in question. The output is served up via localhost:8000 and can be seen below
+This kicks off 3 processes, each of which fetch screenshots of the http and https versions of the hosts in question. The output is served up via localhost:8000 and can be seen below
 ![output results](http://i.imgur.com/OlvyIBp.png)
 
 ## More options
