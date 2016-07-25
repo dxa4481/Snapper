@@ -27,6 +27,13 @@ python snapper.py -l "google.com, gmail.google.com, ads.google.com" -c 3 -v
 This kicks off 3 processes, each of which fetch screenshots of the http and https versions of the hosts in question. The output is served up via localhost:8000 and can be seen below
 ![output results](http://i.imgur.com/OlvyIBp.png)
 
+You can also read from a file:
+```
+python snapper.py -f googleExample.txt -c 10 -v
+```
+Note in addition to the server, the static files are available in your current working directory as "output"
+
+
 ## More options
 
 ```bash
