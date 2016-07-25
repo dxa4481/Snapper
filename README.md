@@ -1,6 +1,8 @@
 # Snapper
 A security tool for grabbing screenshots of many web hosts. This tool is useful after [DNS enumeration](https://github.com/mschwager/fierce) or after enumerating web hosts via nmap or nessus.
 
+A sample output can be seen here: [https://security.love/Snapper/output](https://security.love/Snapper/output)
+
 ## How to install
 
 - Install python dependancies
@@ -31,7 +33,7 @@ You can also read from a file:
 ```
 python snapper.py -f googleExample.txt -c 10 -v
 ```
-Note in addition to the server, the static files are available in your current working directory as "output"
+You can view the results [here](https://security.love/Snapper/output). Note in addition to the server, the static files are available in your current working directory as "output"
 
 
 ## More options
