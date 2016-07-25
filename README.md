@@ -5,6 +5,11 @@ A sample output can be seen here: [https://security.love/Snapper/output](https:/
 
 ## How to install
 
+- Clone snapper
+```bash
+git clone https://github.com/dxa4481/snapper
+```
+
 - Install python dependancies
 ```bash
 pip install -r requirements.txt
@@ -13,11 +18,6 @@ pip install -r requirements.txt
 - Install phantomJS (you need to have [npm installed](https://nodejs.org/en/download/package-manager/))
 ```bash
 npm -g install phantomjs
-```
-
-- Clone snapper
-```bash
-git clone https://github.com/dxa4481/snapper
 ```
 
 ## How to use
