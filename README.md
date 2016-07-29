@@ -10,7 +10,7 @@ A sample output can be seen here: [https://security.love/Snapper/output](https:/
 git clone https://github.com/dxa4481/snapper
 ```
 
-- Install python dependancies
+- Install python dependencies
 ```bash
 pip install -r requirements.txt
 ```
