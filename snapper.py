@@ -66,6 +66,68 @@ def host_worker(hostQueue, fileQueue, timeout, user_agent, verbose):
                 if verbose:
                     print("%s is unreachable or timed out" % host)
 
+def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, verbose=True,
+                    numWorkers=1, user_agent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML,\
+                    like Gecko) Chrome/41.0.2228.0 Safari/537.36"):
+    outpath = os.path.join(outpath, "output")
+    cssOutputPath = os.path.join(outpath, "css")
+    jsOutputPath = os.path.join(outpath, "js")
+    imagesOutputPath = os.path.join(outpath, "images")
+    if not os.path.exists(outpath):
+        os.makedirs(outpath)
+    if not os.path.exists(imagesOutputPath):
+        os.makedirs(imagesOutputPath)
+    if not os.path.exists(cssOutputPath):
+        os.makedirs(cssOutputPath)
+    if not os.path.exists(jsOutputPath):
+        os.makedirs(jsOutputPath)
+    cssTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "css")
+    jsTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "js")
+    copyfile(os.path.join(cssTemplatePath, "materialize.min.css"), os.path.join(cssOutputPath, "materialize.min.css"))
+    copyfile(os.path.join(jsTemplatePath, "jquery.min.js"), os.path.join(jsOutputPath, "jquery.min.js"))
+    copyfile(os.path.join(jsTemplatePath, "materialize.min.js"), os.path.join(jsOutputPath, "materialize.min.js"))
+    
+    hostQueue = Queue()
+    fileQueue = Queue()
+
+    workers = []
+    for host in hosts:
+        hostQueue.put(host)
+    for i in range(numWorkers):
+        p = Process(target=host_worker, args=(hostQueue, fileQueue, timeout, user_agent, verbose))
+        workers.append(p)
+        p.start()
+    try:
+        for worker in workers:
+            worker.join()
+    except KeyboardInterrupt:
+        for worker in workers:
+            worker.terminate()
+            worker.join()
+        sys.exit()
+    setsOfSix = []
+    count = 0
+    hosts = {}
+    while(not fileQueue.empty()):
+        if count == 6:
+            setsOfSix.append(hosts)
+            hosts = {}
+            count = 0
+        temp = fileQueue.get()
+        hosts.update(temp)
+    setsOfSix.append(hosts)
+    template = env.get_template('index.html')
+    with open(os.path.join(outpath, "index.html"), "w") as outputFile:
+        outputFile.write(template.render(setsOfSix=setsOfSix))
+    if serve:
+        chdir("output")
+        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        httpd = SocketServer.TCPServer(("127.0.0.1", PORT), Handler)
+        print("Serving at port", PORT)
+        httpd.serve_forever()
+    else:
+        return True
+
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-f", "--file", action="store", dest="filename",
@@ -107,55 +169,8 @@ if __name__ == "__main__":
     verbose = options.verbose
     PORT = options.port
     user_agent = options.user_agent
-    hostQueue = Queue()
-    fileQueue = Queue()
-    cssOutputPath = os.path.join("output", "css")
-    jsOutputPath = os.path.join("output", "js")
-    imagesOutputPath = os.path.join("output", "images")
-    if not os.path.exists("output"):
-        os.makedirs("output")
-    if not os.path.exists(imagesOutputPath):
-        os.makedirs(imagesOutputPath)
-    if not os.path.exists(cssOutputPath):
-        os.makedirs(cssOutputPath)
-    if not os.path.exists(jsOutputPath):
-        os.makedirs(jsOutputPath)
-    cssTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "css")
-    jsTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "js")
-    copyfile(os.path.join(cssTemplatePath, "materialize.min.css"), os.path.join(cssOutputPath, "materialize.min.css"))
-    copyfile(os.path.join(jsTemplatePath, "jquery.min.js"), os.path.join(jsOutputPath, "jquery.min.js"))
-    copyfile(os.path.join(jsTemplatePath, "materialize.min.js"), os.path.join(jsOutputPath, "materialize.min.js"))
-    workers = []
-    for host in hosts:
-        hostQueue.put(host)
-    for i in range(numWorkers):
-        p = Process(target=host_worker, args=(hostQueue, fileQueue, timeout, user_agent, verbose))
-        workers.append(p)
-        p.start()
-    try:
-        for worker in workers:
-            worker.join()
-    except KeyboardInterrupt:
-        for worker in workers:
-            worker.terminate()
-            worker.join()
-        sys.exit()
-    setsOfSix = []
-    count = 0
-    hosts = {}
-    while(not fileQueue.empty()):
-        if count == 6:
-            setsOfSix.append(hosts)
-            hosts = {}
-            count = 0
-        temp = fileQueue.get()
-        hosts.update(temp)
-    setsOfSix.append(hosts)
-    template = env.get_template('index.html')
-    with open(os.path.join("output", "index.html"), "w") as outputFile:
-        outputFile.write(template.render(setsOfSix=setsOfSix))
-    chdir("output")
-    Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-    httpd = SocketServer.TCPServer(("127.0.0.1", PORT), Handler)
-    print("Serving at port", PORT)
-    httpd.serve_forever()
+
+    capture_snaps(hosts, os.getcwd(), timeout, True, PORT, verbose,
+            numWorkers, user_agent)
+
+
