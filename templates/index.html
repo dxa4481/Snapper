@@ -8,10 +8,10 @@
     <body>
         {% for hosts in setsOfSix%}
             <div class="row">
-                {% for host, filename in hosts.iteritems()%}
+                {% for host, filename in hosts%}
                     <div class="col l2 m4 s6">
                         <img style="cursor: pointer; padding: 25px; width:95%; border:1px solid #021a40;" onclick="updateModel('{{filename.split('output/')[1]}}', '{{host}}')" src="{{filename.split('output/')[1]}}"/>
-                        <a src="{{host}}">{{host}}</a>
+                        <a style="white-space: nowrap; overflow: hidden; display: block; text-overflow: ellipsis;" src="{{host}}">{{host}}</a>
                     </div>
                 {% endfor %}
             </div>

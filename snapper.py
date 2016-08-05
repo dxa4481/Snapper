@@ -3,7 +3,15 @@ from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from optparse import OptionParser
 from multiprocessing import Process, Queue
-import sys, SimpleHTTPServer, SocketServer, os
+import sys, os
+try:
+    import SocketServer
+except ImportError:
+    import socketserver as SocketServer
+try:
+    import SimpleHTTPServer
+except ImportError:
+    import http.server as SimpleHTTPServer
 from os import chdir
 from shutil import copyfile
 from requests import get
@@ -66,9 +74,10 @@ def host_worker(hostQueue, fileQueue, timeout, user_agent, verbose):
                 if verbose:
                     print("%s is unreachable or timed out" % host)
 
-def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, verbose=True,
-                    numWorkers=1, user_agent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML,\
-                    like Gecko) Chrome/41.0.2228.0 Safari/537.36"):
+def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, 
+        verbose=True, numWorkers=1, user_agent="Mozilla/5.0 (Windows NT\
+            6.1) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/41.0.2228.\
+            0 Safari/537.36"):
     outpath = os.path.join(outpath, "output")
     cssOutputPath = os.path.join(outpath, "css")
     jsOutputPath = os.path.join(outpath, "js")
@@ -110,12 +119,18 @@ def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, verbose=Tr
     hosts = {}
     while(not fileQueue.empty()):
         if count == 6:
-            setsOfSix.append(hosts)
+            try:
+                setsOfSix.append(hosts.iteritems())
+            except AttributeError:
+                setsOfSix.append(hosts.items())
             hosts = {}
             count = 0
         temp = fileQueue.get()
         hosts.update(temp)
-    setsOfSix.append(hosts)
+    try:
+        setsOfSix.append(hosts.iteritems())
+    except AttributeError:
+        setsOfSix.append(hosts.items())
     template = env.get_template('index.html')
     with open(os.path.join(outpath, "index.html"), "w") as outputFile:
         outputFile.write(template.render(setsOfSix=setsOfSix))
