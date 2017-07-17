@@ -14,7 +14,10 @@ except ImportError:
     import http.server as SimpleHTTPServer
 from os import chdir
 from shutil import copyfile
+import requests
 from requests import get
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from uuid import uuid4
 from selenium.common.exceptions import TimeoutException
 
