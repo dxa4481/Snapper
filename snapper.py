@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from optparse import OptionParser
 from multiprocessing import Process, Queue
-import sys, os
+import sys, os, errno
 try:
     import SocketServer
 except ImportError:
@@ -76,6 +76,14 @@ def host_worker(hostQueue, fileQueue, timeout, user_agent, verbose):
             else:
                 if verbose:
                     print("%s is unreachable or timed out" % host)
+
+def mkdir(outpath):
+    try:
+        os.makedirs(outpath)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(outpath):
+            return
+        raise
 
 def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, 
         verbose=True, numWorkers=1, user_agent="Mozilla/5.0 (Windows NT\
