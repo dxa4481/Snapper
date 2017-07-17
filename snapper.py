@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from argparse import ArgumentParser
 from multiprocessing import Process, Queue
-import sys, os
+import sys, os, errno
 try:
     import SocketServer
 except ImportError:
@@ -14,7 +14,10 @@ except ImportError:
     import http.server as SimpleHTTPServer
 from os import chdir
 from shutil import copyfile
+import requests
 from requests import get
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from uuid import uuid4
 from selenium.common.exceptions import TimeoutException
 
@@ -74,6 +77,14 @@ def host_worker(hostQueue, fileQueue, timeout, user_agent, verbose):
                 if verbose:
                     print("%s is unreachable or timed out" % host)
 
+def mkdir(outpath):
+    try:
+        os.makedirs(outpath)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(outpath):
+            return
+        raise
+
 def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, 
         verbose=True, numWorkers=1, user_agent="Mozilla/5.0 (Windows NT\
             6.1) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/41.0.2228.\
@@ -82,14 +93,10 @@ def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000,
     cssOutputPath = os.path.join(outpath, "css")
     jsOutputPath = os.path.join(outpath, "js")
     imagesOutputPath = os.path.join(outpath, "images")
-    if not os.path.exists(outpath):
-        os.makedirs(outpath)
-    if not os.path.exists(imagesOutputPath):
-        os.makedirs(imagesOutputPath)
-    if not os.path.exists(cssOutputPath):
-        os.makedirs(cssOutputPath)
-    if not os.path.exists(jsOutputPath):
-        os.makedirs(jsOutputPath)
+    mkdir(outpath)
+    mkdir(imagesOutputPath)
+    mkdir(cssOutputPath)
+    mkdir(jsOutputPath)
     cssTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "css")
     jsTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "js")
     copyfile(os.path.join(cssTemplatePath, "materialize.min.css"), os.path.join(cssOutputPath, "materialize.min.css"))
