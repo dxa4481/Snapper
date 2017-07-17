@@ -93,14 +93,10 @@ def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000,
     cssOutputPath = os.path.join(outpath, "css")
     jsOutputPath = os.path.join(outpath, "js")
     imagesOutputPath = os.path.join(outpath, "images")
-    if not os.path.exists(outpath):
-        os.makedirs(outpath)
-    if not os.path.exists(imagesOutputPath):
-        os.makedirs(imagesOutputPath)
-    if not os.path.exists(cssOutputPath):
-        os.makedirs(cssOutputPath)
-    if not os.path.exists(jsOutputPath):
-        os.makedirs(jsOutputPath)
+    mkdir(outpath)
+    mkdir(imagesOutputPath)
+    mkdir(cssOutputPath)
+    mkdir(jsOutputPath)
     cssTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "css")
     jsTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "js")
     copyfile(os.path.join(cssTemplatePath, "materialize.min.css"), os.path.join(cssOutputPath, "materialize.min.css"))
