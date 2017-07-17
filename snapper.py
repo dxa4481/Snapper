@@ -1,9 +1,9 @@
 from jinja2 import Environment, PackageLoader
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from optparse import OptionParser
+from argparse import ArgumentParser
 from multiprocessing import Process, Queue
-import sys, os
+import sys, os, errno
 try:
     import SocketServer
 except ImportError:
@@ -14,7 +14,10 @@ except ImportError:
     import http.server as SimpleHTTPServer
 from os import chdir
 from shutil import copyfile
+import requests
 from requests import get
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from uuid import uuid4
 from selenium.common.exceptions import TimeoutException
 
@@ -74,6 +77,14 @@ def host_worker(hostQueue, fileQueue, timeout, user_agent, verbose):
                 if verbose:
                     print("%s is unreachable or timed out" % host)
 
+def mkdir(outpath):
+    try:
+        os.makedirs(outpath)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(outpath):
+            return
+        raise
+
 def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000, 
         verbose=True, numWorkers=1, user_agent="Mozilla/5.0 (Windows NT\
             6.1) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/41.0.2228.\
@@ -82,14 +93,10 @@ def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000,
     cssOutputPath = os.path.join(outpath, "css")
     jsOutputPath = os.path.join(outpath, "js")
     imagesOutputPath = os.path.join(outpath, "images")
-    if not os.path.exists(outpath):
-        os.makedirs(outpath)
-    if not os.path.exists(imagesOutputPath):
-        os.makedirs(imagesOutputPath)
-    if not os.path.exists(cssOutputPath):
-        os.makedirs(cssOutputPath)
-    if not os.path.exists(jsOutputPath):
-        os.makedirs(jsOutputPath)
+    mkdir(outpath)
+    mkdir(imagesOutputPath)
+    mkdir(cssOutputPath)
+    mkdir(jsOutputPath)
     cssTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "css")
     jsTemplatePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates", "js")
     copyfile(os.path.join(cssTemplatePath, "materialize.min.css"), os.path.join(cssOutputPath, "materialize.min.css"))
@@ -144,48 +151,46 @@ def capture_snaps(hosts, outpath, timeout=10, serve=False, port=8000,
         return True
 
 if __name__ == "__main__":
-    parser = OptionParser()
-    parser.add_option("-f", "--file", action="store", dest="filename",
+    parser = ArgumentParser()
+    parser.add_argument("-f", "--file", action="store", dest="filename",
                       help="Souce from input file", metavar="FILE")
-    parser.add_option("-l", "--list", action="store", dest="list",
+    parser.add_argument("-l", "--list", action="store", dest="list",
                       help="Source from commandline list")
-    parser.add_option("-u", '--user-agent', action='store', 
+    parser.add_argument("-u", '--user-agent', action='store', 
                       dest="user_agent", type=str, 
                       default="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML,\
                               like Gecko) Chrome/41.0.2228.0 Safari/537.36", 
                       help='The user agent used for requests')
-    parser.add_option("-c", '--concurrency', action='store', 
+    parser.add_argument("-c", '--concurrency', action='store', 
                       dest="numWorkers", type=int, default=1, 
                       help='Number of cuncurrent processes')
-    parser.add_option("-t", '--timeout', action='store', 
+    parser.add_argument("-t", '--timeout', action='store', 
                       dest="timeout", type=int, default=10, 
                       help='Number of seconds to try to resolve')
-    parser.add_option("-p", '--port', action='store', 
+    parser.add_argument("-p", '--port', action='store', 
                       dest="port", type=int, default=8000, 
                       help='Port to run server on')
-    parser.add_option("-v", action='store_true', dest="verbose",
+    parser.add_argument("-v", action='store_true', dest="verbose",
                       help='Display console output for fetching each host')
 
 
-    (options, args) = parser.parse_args()
-    if options.filename:
-        with open(options.filename, 'r') as inputFile:
+    args = parser.parse_args()
+    if args.filename:
+        with open(args.filename, 'r') as inputFile:
             hosts = inputFile.readlines()
             hosts = map(lambda s: s.strip(), hosts)
-    elif options.list:
+    elif args.list:
         hosts = []
-        for item in options.list.split(","):
+        for item in args.list.split(","):
             hosts.append(item.strip())
     else:
         print("invalid args")
         sys.exit()
-    numWorkers = options.numWorkers
-    timeout = options.timeout
-    verbose = options.verbose
-    PORT = options.port
-    user_agent = options.user_agent
+    numWorkers = args.numWorkers
+    timeout = args.timeout
+    verbose = args.verbose
+    PORT = args.port
+    user_agent = args.user_agent
 
     capture_snaps(hosts, os.getcwd(), timeout, True, PORT, verbose,
             numWorkers, user_agent)
-
-
